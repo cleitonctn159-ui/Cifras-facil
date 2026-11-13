@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#0B0C10" />
+  <meta name="description" content="Cifra Fácil — Cifras musicais offline com modo palco, transposição inteligente, rolagem automática e teleprompter vocal." />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Cifra Fácil" />
+
+  <link rel="manifest" href="./manifest.json" />
+  <link rel="icon" type="image/png" sizes="192x192" href="./icons/icon-192.png" />
+  <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png" />
+  <link rel="stylesheet" href="./styles.css" />
+
+  <title>Cifra Fácil — Modo Palco &amp; Cifras Offline</title>
+</head>
+<body>
+  <div id="app" class="app-shell">
+    <!-- VIEW: HOME / BIBLIOTECA -->
+    <section id="view-home" class="view active" aria-label="Biblioteca de Cifras">
+      <header class="topbar">
+        <div class="brand">
+          <img src="./icons/icon-192.png" alt="Logo Cifra Fácil" class="brand-icon" />
+          <div>
+            <h1 class="brand-title">Cifra Fácil</h1>
+            <div class="status-row">
+              <span id="offline-badge" class="badge badge-emerald">Offline no aparelho</span>
+              <span id="song-count-badge" class="badge badge-muted">0 cifras</span>
+            </div>
+          </div>
+        </div>
+        <div class="topbar-actions">
+          <button id="btn-install-pwa" class="btn btn-gold-outline" type="button" title="Instalar aplicativo">
+            <span aria-hidden="true">⬇</span>
+            <span class="hide-xs">Instalar</span>
+          </button>
+          <button id="btn-open-guide" class="btn btn-surface" type="button" title="Guia offline e publicação gratuita">
+            <span aria-hidden="true">?</span>
+            <span class="hide-xs">Guia</span>
+          </button>
+          <div class="menu-wrap">
+            <button id="btn-home-menu" class="btn btn-icon" type="button" aria-label="Menu de backup">⋮</button>
+            <div id="home-menu-dropdown" class="dropdown hidden" role="menu">
+              <button id="btn-export-json" class="dropdown-item" type="button">Exportar backup (JSON)</button>
+              <button id="btn-import-json" class="dropdown-item" type="button">Importar backup (JSON)</button>
+              <button id="btn-restore-demos" class="dropdown-item" type="button">Restaurar músicas de exemplo</button>
+              <button id="btn-menu-guide" class="dropdown-item" type="button">Instalação e hospedagem gratuita</button>
+            </div>
+            <input id="input-import-json" type="file" accept="application/json,.json" class="hidden" />
+          </div>
+        </div>
+      </header>
+
+      <main class="container">
+        <section class="hero-card">
+          <img src="./assets/stage-hero.jpg" alt="" class="hero-bg" />
+          <div class="hero-scrim"></div>
+          <div class="hero-content">
+            <div>
+              <h2 class="hero-title">Seu repertório pronto para o palco</h2>
+              <p id="hero-subtitle" class="hero-subtitle">Cifras salvas localmente no navegador, mesmo sem internet.</p>
+            </div>
+            <button id="btn-new-song" class="btn btn-gold btn-lg" type="button">
+              + Nova Música
+            </button>
+          </div>
+        </section>
+
+        <section class="search-section">
+          <div class="search-box">
+            <span class="search-icon" aria-hidden="true">⌕</span>
+            <input
+              id="input-search"
+              type="search"
+              placeholder="Buscar por título, artista, tom ou trecho..."
+              autocomplete="off"
+            />
+            <button id="btn-clear-search" class="btn-clear hidden" type="button" aria-label="Limpar busca">✕</button>
+          </div>
+
+          <div id="filter-chips" class="chips-row" role="tablist" aria-label="Filtros">
+            <button class="chip active" data-filter="all" type="button">Todas</button>
+            <button class="chip" data-filter="favorites" type="button">Favoritas (<span id="fav-count">0</span>)</button>
+            <button class="chip" data-filter="recent" type="button">Recentes</button>
+            <button class="chip" data-filter="key" type="button">Por Tom</button>
+          </div>
+          <div id="key-subchips" class="chips-row hidden"></div>
+        </section>
+
+        <section id="recent-section" class="recent-section hidden">
+          <h3 class="section-heading">Tocadas Recentemente</h3>
+          <div id="recent-list" class="recent-strip"></div>
+        </section>
+
+        <section class="library-section">
+          <div class="section-header-row">
+            <h3 id="library-heading" class="section-heading">Biblioteca de Cifras</h3>
+            <span id="filtered-count" class="count-pill">0</span>
+          </div>
+          <div id="library-grid" class="library-grid"></div>
+          <div id="empty-library" class="empty-card hidden">
+            <p class="empty-title">Nenhuma cifra encontrada</p>
+            <p class="empty-desc">Crie uma nova cifra, limpe os filtros ou restaure as músicas de exemplo.</p>
+            <div class="empty-actions">
+              <button id="btn-empty-clear" class="btn btn-surface" type="button">Limpar filtros</button>
+              <button id="btn-empty-demos" class="btn btn-surface" type="button">Restaurar exemplos</button>
+              <button id="btn-empty-new" class="btn btn-gold" type="button">+ Nova Música</button>
+            </div>
+          </div>
+        </section>
+      </main>
+    </section>
+
+    <!-- VIEW: EDITOR -->
+    <section id="view-editor" class="view" aria-label="Editor de Cifra">
+      <header class="topbar">
+        <div class="topbar-left">
+          <button id="btn-editor-back" class="btn btn-icon" type="button" aria-label="Voltar">←</button>
+          <h2 id="editor-heading" class="topbar-title">Nova Música</h2>
+        </div>
+        <div class="topbar-actions">
+          <button id="btn-editor-example" class="btn btn-gold-outline" type="button">Exemplo</button>
+          <button id="btn-editor-save" class="btn btn-gold" type="button">Salvar</button>
+        </div>
+      </header>
+
+      <main class="container editor-container">
+        <div class="segmented-tabs" role="tablist">
+          <button id="tab-editor-edit" class="seg-tab active" type="button">Editar Texto</button>
+          <button id="tab-editor-preview" class="seg-tab" type="button">Pré-visualizar</button>
+        </div>
+
+        <div id="panel-editor-edit" class="editor-panel">
+          <div class="form-row">
+            <label class="field">
+              <span>Título da música *</span>
+              <input id="editor-title" type="text" placeholder="Ex.: Luz da Manhã" />
+              <small id="editor-title-error" class="field-error hidden"></small>
+            </label>
+          </div>
+
+          <div class="form-row form-row-split">
+            <label class="field grow">
+              <span>Artista / Banda</span>
+              <input id="editor-artist" type="text" placeholder="Ex.: Projeto Horizonte" />
+            </label>
+            <label class="field key-select-wrap">
+              <span>Tom Original</span>
+              <select id="editor-key"></select>
+            </label>
+          </div>
+
+          <div class="tip-box">
+            Aceita cifras tradicionais (acordes na linha acima da letra) ou inline como <code>[C]Minha vida [G/B]está em [Am7]tuas mãos</code>.
+          </div>
+
+          <div class="chips-row" id="editor-snippets">
+            <button class="chip chip-mono" data-snippet="[Intro]&#10;" type="button">[Intro]</button>
+            <button class="chip chip-mono" data-snippet="[Verso 1]&#10;" type="button">[Verso]</button>
+            <button class="chip chip-mono" data-snippet="[Pré-Refrão]&#10;" type="button">[Pré-Refrão]</button>
+            <button class="chip chip-mono" data-snippet="[Refrão]&#10;" type="button">[Refrão]</button>
+            <button class="chip chip-mono" data-snippet="[Ponte]&#10;" type="button">[Ponte]</button>
+            <button class="chip chip-mono" data-snippet="[Solo]&#10;" type="button">[Solo]</button>
+            <button class="chip chip-mono" data-snippet="[Final]&#10;" type="button">[Final]</button>
+            <button class="chip chip-mono" data-snippet="[]" type="button">[Acorde]</button>
+          </div>
+
+          <label class="field">
+            <span>Letra e cifras *</span>
+            <textarea
+              id="editor-content"
+              rows="14"
+              spellcheck="false"
+              placeholder="[Intro]&#10;G   D/F#   Em7   C9&#10;&#10;[Verso 1]&#10;[G]Minha vida [D/F#]está em [Em7]tuas [C9]mãos"
+            ></textarea>
+            <small id="editor-content-error" class="field-error hidden"></small>
+          </label>
+        </div>
+
+        <div id="panel-editor-preview" class="editor-panel hidden">
+          <div class="preview-transpose-bar">
+            <div>
+              <strong id="preview-song-title">Sem título</strong>
+              <div id="preview-key-info" class="mono-gold">Original: G • Atual: G</div>
+            </div>
+            <div class="btn-group">
+              <button id="btn-preview-down" class="btn btn-icon-box" type="button" aria-label="Descer meio tom">−</button>
+              <button id="btn-preview-up" class="btn btn-icon-box" type="button" aria-label="Subir meio tom">+</button>
+            </div>
+          </div>
+          <div id="editor-preview-sheet" class="chord-sheet"></div>
+        </div>
+      </main>
+    </section>
+
+    <!-- VIEW: MODO PALCO -->
+    <section id="view-stage" class="view stage-view" aria-label="Modo Palco">
+      <header id="stage-topbar" class="topbar">
+        <div class="topbar-left">
+          <button id="btn-stage-back" class="btn btn-icon" type="button" aria-label="Voltar para biblioteca">←</button>
+          <div class="stage-meta">
+            <h2 id="stage-title" class="topbar-title">Música</h2>
+            <p id="stage-artist" class="topbar-subtitle">Artista</p>
+          </div>
+        </div>
+        <div class="topbar-actions">
+          <button id="btn-stage-fav" class="btn btn-icon" type="button" aria-label="Favoritar">♡</button>
+          <button id="btn-stage-fullscreen" class="btn btn-icon gold-text" type="button" title="Tela cheia">⛶</button>
+          <div class="menu-wrap">
+            <button id="btn-stage-menu" class="btn btn-icon" type="button" aria-label="Mais ações">⋮</button>
+            <div id="stage-menu-dropdown" class="dropdown hidden" role="menu">
+              <button id="btn-stage-edit" class="dropdown-item" type="button">Editar cifra</button>
+              <button id="btn-stage-export-txt" class="dropdown-item" type="button">Exportar cifra (.txt)</button>
+              <button id="btn-stage-share-txt" class="dropdown-item" type="button">Copiar / Compartilhar texto</button>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <!-- BANNER TELEPROMPTER VOCAL -->
+      <div id="voice-banner" class="voice-banner hidden" role="status" aria-live="polite">
+        <div class="voice-banner-inner">
+          <div class="voice-status-head">
+            <span id="voice-dot" class="voice-dot"></span>
+            <div class="voice-status-text">
+              <strong id="voice-status-title">Teleprompter vocal</strong>
+              <span id="voice-status-detail">Pronto para ouvir</span>
+            </div>
+          </div>
+
+          <div class="voice-controls-row">
+            <button id="btn-voice-pause" class="btn btn-sm btn-gold-outline hidden" type="button">Pausar</button>
+            <button id="btn-voice-resume" class="btn btn-sm btn-emerald hidden" type="button">Retomar</button>
+            <button id="btn-voice-fallback-auto" class="btn btn-sm btn-gold hidden" type="button">Rolagem Automática</button>
+            <button id="btn-voice-settings" class="btn btn-sm btn-surface hidden" type="button">Ajustes</button>
+            <button id="btn-voice-stop" class="btn btn-sm btn-ghost" type="button">Encerrar</button>
+          </div>
+
+          <div id="voice-calibration" class="voice-calibration hidden">
+            <label class="cal-slider">
+              <div class="cal-label">
+                <span>Sensibilidade vocal</span>
+                <strong id="voice-sens-label" class="mono-gold">Equilibrada</strong>
+              </div>
+              <input id="input-voice-sens" type="range" min="0.2" max="1.0" step="0.05" value="0.6" />
+            </label>
+            <label class="cal-slider">
+              <div class="cal-label">
+                <span>Suavidade da rolagem</span>
+                <strong id="voice-speed-label" class="mono-gold">1.2x</strong>
+              </div>
+              <input id="input-voice-speed" type="range" min="0.5" max="3.0" step="0.1" value="1.2" />
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <div id="stage-scroll-area" class="stage-scroll-area">
+        <button id="btn-exit-fullscreen" class="exit-fullscreen-pill hidden" type="button">
+          Mostrar barra
+        </button>
+        <div id="stage-fullscreen-header" class="stage-fs-header hidden">
+          <h2 id="stage-fs-title"></h2>
+          <p id="stage-fs-key" class="mono-gold"></p>
+        </div>
+        <div id="stage-sheet" class="chord-sheet stage-sheet"></div>
+      </div>
+
+      <footer class="stage-dock">
+        <div id="stage-dock-top" class="dock-row dock-row-top">
+          <div class="transpose-controls">
+            <button id="btn-transpose-down" class="btn btn-icon-box" type="button" aria-label="Descer meio tom">−</button>
+            <button id="btn-transpose-reset" class="key-badge" type="button" title="Toque para restaurar tom original">
+              <span id="stage-current-key" class="key-badge-main">Tom: G</span>
+              <span id="stage-original-key" class="key-badge-sub">Original</span>
+            </button>
+            <button id="btn-transpose-up" class="btn btn-icon-box" type="button" aria-label="Subir meio tom">+</button>
+          </div>
+
+          <div class="font-controls">
+            <button id="btn-font-down" class="btn btn-icon-box" type="button" aria-label="Diminuir fonte">A−</button>
+            <span id="stage-font-value" class="font-value">18</span>
+            <button id="btn-font-up" class="btn btn-icon-box" type="button" aria-label="Aumentar fonte">A+</button>
+          </div>
+        </div>
+
+        <div class="dock-row dock-row-bottom">
+          <button id="btn-autoscroll-toggle" class="btn btn-gold btn-roll" type="button">▶ Rolar</button>
+          <div class="speed-control">
+            <div class="speed-labels">
+              <span>Velocidade</span>
+              <strong id="stage-speed-value" class="mono-gold">1.0x</strong>
+            </div>
+            <input id="input-autoscroll-speed" type="range" min="0.4" max="3.5" step="0.1" value="1.0" />
+          </div>
+          <button id="btn-mic-toggle" class="btn btn-mic" type="button">🎙 Voz</button>
+        </div>
+      </footer>
+    </section>
+  </div>
+
+  <!-- MODAL: GUIA OFFLINE, INSTALAÇÃO & PUBLICAÇÃO GRATUITA -->
+  <div id="modal-guide" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="guide-modal-title">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 id="guide-modal-title">Instalação PWA, Offline e Publicação Gratuita</h3>
+        <button id="btn-close-guide" class="btn btn-icon" type="button" aria-label="Fechar">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="guide-block">
+          <h4>100% Offline e Gratuito</h4>
+          <p>Todas as suas cifras, transposições e preferências ficam gravadas localmente no seu aparelho (IndexedDB + localStorage), sem login obrigatório e sem serviços pagos.</p>
+        </div>
+        <div class="guide-block">
+          <h4>Instalar no Windows (Chrome / Edge)</h4>
+          <p>Clique no botão <strong>Instalar</strong> no topo do Cifra Fácil ou no ícone de instalação na barra de endereços do navegador para abrir como aplicativo independente.</p>
+        </div>
+        <div class="guide-block">
+          <h4>Instalar no Android (Chrome)</h4>
+          <p>Toque em <strong>Instalar</strong> ou abra o menu <strong>⋮</strong> do Chrome e escolha <strong>Adicionar à tela inicial</strong> / <strong>Instalar aplicativo</strong>. Funciona offline sem passar pela Play Store.</p>
+        </div>
+        <div class="guide-block">
+          <h4>Instalar no iPhone / iPad (Safari)</h4>
+          <p>Abra no <strong>Safari</strong>, toque no botão <strong>Compartilhar</strong> (quadrado com seta para cima) e selecione <strong>Adicionar à Tela de Início</strong>. O app abrirá em tela cheia sem barra de navegação.</p>
+        </div>
+        <div class="guide-block">
+          <h4>Hospedagem Gratuita como Site Estático (sem cartão)</h4>
+          <p>Publique gratuitamente a pasta <code>pwa/</code> com HTTPS automático usando o <strong>GitHub Pages</strong> (opção recomendada), <strong>Netlify Drop</strong> ou <strong>Cloudflare Pages</strong> — sem Google Play Console e sem cartão de crédito. O passo a passo completo para iniciantes está em <code>pwa/PUBLICACAO_GRATUITA.md</code>.</p>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button id="btn-guide-install-now" class="btn btn-gold hidden" type="button">Instalar agora</button>
+        <button id="btn-guide-ok" class="btn btn-surface" type="button">Entendi</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: CONFIRMAÇÃO DE EXCLUSÃO -->
+  <div id="modal-delete" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="delete-modal-title">
+    <div class="modal-card modal-card-sm">
+      <div class="modal-header">
+        <h3 id="delete-modal-title">Excluir cifra?</h3>
+      </div>
+      <div class="modal-body">
+        <p id="delete-modal-message">Tem certeza que deseja excluir esta música?</p>
+      </div>
+      <div class="modal-footer">
+        <button id="btn-delete-cancel" class="btn btn-surface" type="button">Cancelar</button>
+        <button id="btn-delete-confirm" class="btn btn-danger" type="button">Excluir</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
+
+  <script src="./chord-engine.js"></script>
+  <script src="./lyric-matcher.js"></script>
+  <script src="./demo-songs.js"></script>
+  <script src="./app.js"></script>
+</body>
+</html>

@@ -1,0 +1,49 @@
+{
+  "id": "./",
+  "name": "Cifra Fácil",
+  "short_name": "Cifra Fácil",
+  "description": "Cifras musicais offline com modo palco, transposição inteligente de acordes, rolagem automática e teleprompter vocal.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0B0C10",
+  "theme_color": "#0B0C10",
+  "lang": "pt-BR",
+  "categories": ["music", "utilities"],
+  "icons": [
+    {
+      "src": "./icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "./icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "./icons/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Nova Música",
+      "short_name": "Nova",
+      "description": "Criar uma nova cifra offline",
+      "url": "./index.html?action=new",
+      "icons": [
+        {
+          "src": "./icons/icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    }
+  ]
+}
